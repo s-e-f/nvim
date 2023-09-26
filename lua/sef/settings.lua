@@ -14,7 +14,9 @@ local options = {
 	termguicolors = true,
 	cursorline = true,
 	colorcolumn = "120",
-	scrolloff = 15
+	scrolloff = 15,
+
+  background = ""
 }
 
 for option, value in pairs(options) do

@@ -1,17 +1,29 @@
 return {
 
+  "nvim-tree/nvim-web-devicons",
+
   {
     "nvim-tree/nvim-tree.lua",
     version = "*",
     lazy = false,
-    dependencies = {
-      "nvim-tree/nvim-web-devicons",
-    },
     config = function()
-      require("nvim-tree").setup {}
+      require("nvim-tree").setup {
+        actions = {
+          open_file = {
+            quit_on_open = true
+          }
+        }
+      }
     end,
   },
 
+  {
+    "nvim-lualine/lualine.nvim",
+    config = function()
+      require("lualine").setup {
+      }
+    end
+  },
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -57,24 +69,24 @@ return {
 
   "rebelot/kanagawa.nvim",
 
-  {'VonHeikemen/lsp-zero.nvim', branch = 'v3.x'},
-
-  -- LSP Support
-  {
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      {'hrsh7th/cmp-nvim-lsp'},
-    },
-  },
-
-  "williamboman/mason.nvim",
-  "williamboman/mason-lspconfig.nvim",
-  -- Autocompletion
   {
     'hrsh7th/nvim-cmp',
     dependencies = {
       {'L3MON4D3/LuaSnip'},
-    }
-  }
+    },
+  },
+  "hrsh7th/cmp-nvim-lsp",
+
+  'neovim/nvim-lspconfig',
+
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim",
+
+  {
+    "nvim-telescope/telescope.nvim",
+    tag = "0.1.3",
+    dependencies = { "nvim-lua/plenary.nvim" }
+  },
+
 }
 

@@ -3,39 +3,57 @@ require("mason-lspconfig").setup({
   ensure_installed = { "lua_ls" }
 })
 
-local on_attach = function(_, bufnr)
-  vim.keymap.set("n", "gd", vim.lsp.buf.definition, {})
-  vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
-end
-
-require("lspconfig").lua_ls.setup {
-  on_attach = on_attach,
-  on_init = function(client)
-    local path = client.workspace_folders[1].name
-    if not vim.loop.fs_stat(path..'/.luarc.json') and not vim.loop.fs_stat(path..'/.luarc.jsonc') then
-      client.config.settings = vim.tbl_deep_extend('force', client.config.settings, {
+local handlers = {
+  -- The first entry (without a key) will be the default handler
+  -- and will be called for each installed server that doesn't have
+  -- a dedicated handler.
+  function (server_name) -- default handler (optional)
+    require("lspconfig")[server_name].setup {}
+  end,
+  -- Next, you can provide targeted overrides for specific servers.
+  ["rust_analyzer"] = function ()
+    require("rust-tools").setup {}
+  end,
+  ["lua_ls"] = function ()
+    local lspconfig = require("lspconfig")
+    lspconfig.lua_ls.setup {
+      capabilities = require("cmp_nvim_lsp").default_capabilities(),
+      settings = {
         Lua = {
-          runtime = {
-            -- Tell the language server which version of Lua you're using
-            -- (most likely LuaJIT in the case of Neovim)
-            version = 'LuaJIT'
-          },
-          -- Make the server aware of Neovim runtime files
-          workspace = {
-            checkThirdParty = false,
-            library = {
-              vim.env.VIMRUNTIME
-              -- "${3rd}/luv/library"
-              -- "${3rd}/busted/library",
-            }
-            -- or pull in all of 'runtimepath'. NOTE: this is a lot slower
-            -- library = vim.api.nvim_get_runtime_file("", true)
+          diagnostics = {
+            globals = { "vim" }
           }
         }
-      })
-
-      client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
-    end
-    return true
-  end
+      }
+    }
+  end,
 }
+
+-- alt 2. or call the .setup_handlers() function.
+require("mason-lspconfig").setup_handlers(handlers)
+
+local cmp = require("cmp")
+cmp.setup {
+  expand = function(args)
+    require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+  end,
+  window = {
+    -- completion = cmp.config.window.bordered(),
+    -- documentation = cmp.config.window.bordered(),
+  },
+  mapping = cmp.mapping.preset.insert({
+    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.abort(),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+  }),
+  sources = cmp.config.sources({
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' }, -- For luasnip users.
+  },
+  {
+    { name = 'buffer' },
+  })
+}
+
